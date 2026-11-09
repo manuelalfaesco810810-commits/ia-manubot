@@ -12,7 +12,7 @@ st.set_page_config(
 # Configuración de la API Key
 if "GEMINI_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-3.8-flash")
 else:
     st.error("⚠️ Falta configurar la GEMINI_API_KEY en los Secrets de la plataforma.")
 
