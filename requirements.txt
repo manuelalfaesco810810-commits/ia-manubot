@@ -1,2 +1,5 @@
 streamlit
 ddgs
+SpeechRecognition
+pydub
+gTTS
