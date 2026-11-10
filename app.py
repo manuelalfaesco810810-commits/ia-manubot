@@ -8,7 +8,7 @@ st.title("🤖 ManuBot")
 st.write("Preguntame lo que quieras, de mecanica o de lo que sea.")
 
 try:
-    GROQ_KEY = st.secrets["GROQ_API_KEY"]
+    GROQ_KEY = st.secrets["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"]
 except:
     GROQ_KEY = ""
 
