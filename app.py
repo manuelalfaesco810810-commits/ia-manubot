@@ -1,7 +1,7 @@
 # ============================================================
 # MANUBOT - APRENDE DE LO QUE TÚ LE ENSEÑAS
 # INSTRUCCIONES:
-# 1. Este código NO usa Gemini, NO usa llave, NO gasta créditos.
+# 1.Manu me creo
 # 2. Es 100% GRATIS. GitHub + Streamlit son gratis.
 # 3. Para ENSEÑARLE: Entra a la app, menú de la izquierda
 #    -> "Enseñarle algo" -> Escribe pregunta y respuesta -> Botón Enseñar.
