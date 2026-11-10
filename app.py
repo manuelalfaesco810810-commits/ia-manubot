@@ -56,7 +56,7 @@ else:
                         url = "https://api.groq.com/openai/v1/chat/completions"
                         headers = {"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"}
                         data = {
-                            "model": "llama-3.3-70b-versatile",
+                            "model": "llama-3.1-8b-instant",
                             "messages": [
                                 {"role": "system", "content": "Eres ManuBot, un asistente experto en mecanica automotriz y en todo. Explica facil, en espanol."},
                                 {"role": "user", "content": pregunta}
