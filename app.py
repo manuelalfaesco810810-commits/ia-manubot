@@ -5,9 +5,8 @@ import os
 
 st.set_page_config(page_title="ManuBot", page_icon="🤖")
 st.title("🤖 ManuBot")
-st.write("Pregúntame lo que quieras, de mecánica o de lo que sea.")
+st.write("Preguntame lo que quieras, de mecanica o de lo que sea.")
 
-# --- Clave de Groq ---
 try:
     GROQ_KEY = st.secrets["GROQ_API_KEY"]
 except:
@@ -28,32 +27,29 @@ def guardar(datos):
 if "datos" not in st.session_state:
     st.session_state.datos = cargar()
 
-menu = st.sidebar.selectbox("Menú", ["Preguntarle", "Enseñarle algo"])
+menu = st.sidebar.selectbox("Menu", ["Preguntarle", "Ensenarle algo"])
 
-if menu == "Enseñarle algo":
-    st.header("Enseñarle algo nuevo")
+if menu == "Ensenarle algo":
+    st.header("Ensenarle algo nuevo")
     p = st.text_input("Pregunta")
     r = st.text_area("Respuesta")
-    if st.button("Enseñar"):
+    if st.button("Ensenar"):
         if p and r:
             st.session_state.datos[p.lower().strip()] = r
             guardar(st.session_state.datos)
-            st.success("¡Ya aprendí!")
+            st.success("Ya aprendi!")
         else:
             st.warning("Escribe pregunta y respuesta")
-
 else:
-    st.header("Pregúntale")
-    pregunta = st.text_input("Escribe tu pregunta aquí")
+    st.header("Preguntale")
+    pregunta = st.text_input("Escribe tu pregunta aqui")
     if st.button("Preguntar"):
         if pregunta:
             clave = pregunta.lower().strip()
-            # 1. Primero busca lo que tú le enseñaste
             if clave in st.session_state.datos:
                 st.success(st.session_state.datos[clave])
-            # 2. Si no lo sabe, pregunta a Groq
             elif GROQ_KEY == "":
-                st.error("Falta poner la clave de Groq en Secrets. GROQ_API_KEY")
+                st.error("Falta poner la clave de Groq en Secrets.")
             else:
                 with st.spinner("Pensando..."):
                     try:
@@ -62,13 +58,16 @@ else:
                         data = {
                             "model": "llama-3.3-70b-versatile",
                             "messages": [
-                                {"role": "system", "content": "Eres ManuBot, un asistente experto en mecánica automotriz y en todo. Explica fácil, en español, como si le hablaras a un amigo mecánico."},
+                                {"role": "system", "content": "Eres ManuBot, un asistente experto en mecanica automotriz y en todo. Explica facil, en espanol."},
                                 {"role": "user", "content": pregunta}
                             ]
                         }
                         resp = requests.post(url, headers=headers, json=data, timeout=30)
-                        respuesta = resp.json()["choices"][0]["message"]["content"]
-                        st.success(respuesta)
+                        datos_resp = resp.json()
+                        if "choices" not in datos_resp:
+                            st.error(f"Groq dijo: {datos_resp}")
+                        else:
+                            st.success(datos_resp["choices"][0]["message"]["content"])
                     except Exception as e:
                         st.error(f"Error: {e}")
         else:
