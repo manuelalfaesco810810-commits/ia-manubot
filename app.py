@@ -1,8 +1,8 @@
 from flask import Flask, render_template_string, send_from_directory, request, redirect
+import os
 
 app = Flask(__name__)
 
-# DATOS QUE PUEDES EDITAR DESDE LA APP
 datos = {
     "titulo": "FOTO ARES",
     "texto_camara": "Aqui va la camara en vivo de Ares",
@@ -56,7 +56,7 @@ label{color:#ffcc00;font-size:13px}
 <h2>Mi Manada</h2>
 {% for p in perros %}
 <div class="card">
-<img src="{{ p.foto }}">
+<img src="{{ p.foto }}?v=1" onerror="this.src='https://images.dog.ceo/breeds/husky/n02110185_14112.jpg'">
 <h3>{{ p.nombre }}</h3>
 <p>{{ p.raza }} - {{ p.edad }}</p>
 </div>
@@ -91,6 +91,17 @@ label{color:#ffcc00;font-size:13px}
 
 {% if page == 'editar' %}
 <h2>⚙️ Editar Todo</h2>
+
+<h3>📸 Subir Foto de Portada / Manada</h3>
+<div class="card">
+<p>Elige la foto de tus Huskys desde tu celular o compu</p>
+<form method="POST" action="/subir_foto" enctype="multipart/form-data">
+<input type="file" name="foto" accept="image/*" required>
+<br><button type="submit">📸 SUBIR FOTO</button>
+</form>
+<p style="font-size:12px;color:#aaa">Después de subirla, recarga la página de Manada</p>
+</div>
+
 <form method="POST" action="/guardar">
 <div class="card">
 <label>TITULO DE LA APP</label><br>
@@ -102,7 +113,6 @@ label{color:#ffcc00;font-size:13px}
 <label>TEXTO CHAT</label><br>
 <input name="texto_chat" value="{{ datos.texto_chat }}">
 </div>
-
 <h3>Manada - Perro 1</h3>
 <div class="card">
 <input name="p0_nombre" value="{{ perros[0].nombre }}">
@@ -121,7 +131,6 @@ label{color:#ffcc00;font-size:13px}
 <input name="p2_raza" value="{{ perros[2].raza }}">
 <input name="p2_edad" value="{{ perros[2].edad }}">
 </div>
-
 <h3>Momentos - 1</h3>
 <div class="card">
 <input name="m0_titulo" value="{{ momentos[0].titulo }}">
@@ -137,12 +146,10 @@ label{color:#ffcc00;font-size:13px}
 <input name="m2_titulo" value="{{ momentos[2].titulo }}">
 <input name="m2_fecha" value="{{ momentos[2].fecha }}">
 </div>
-
 <button type="submit">💾 GUARDAR TODO</button><br><br>
 <a href="/" style="color:#fff">Cancelar</a>
 </form>
 {% endif %}
-
 </body>
 </html>
 """
@@ -174,6 +181,13 @@ def chat():
 @app.route('/editar')
 def editar():
     return render_template_string(HTML, page='editar', perros=perros, momentos=momentos, datos=datos)
+
+@app.route('/subir_foto', methods=['POST'])
+def subir_foto():
+    f = request.files.get('foto')
+    if f:
+        f.save('manada.jpg')
+    return redirect('/editar')
 
 @app.route('/guardar', methods=['POST'])
 def guardar():
