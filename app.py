@@ -1,211 +1,184 @@
 from flask import Flask, render_template_string, send_from_directory, request, redirect
 import os, json
-
 app = Flask(__name__)
 ARCHIVO = "datos.json"
 
-def datos_nuevos():
+def nuevos():
     return {
-        "perros": [
-            {"nombre": "Loki", "raza": "Husky", "edad": "2 años", "foto": "https://images.dog.ceo/breeds/husky/n02110185_14112.jpg"},
-            {"nombre": "Luna", "raza": "Husky", "edad": "1 año", "foto": "https://images.dog.ceo/breeds/husky/n02110185_10047.jpg"},
-            {"nombre": "Ares", "raza": "Husky", "edad": "2 años", "foto": "https://images.dog.ceo/breeds/husky/n02110185_1469.jpg"},
-        ],
-        "camara": "Camara en vivo de Loki",
-        "alerta": "Si Loki se sale, aqui te avisamos",
-        "chat": "Bienvenido al Chat de la Manada",
-        "momentos": [
-            {"titulo": "Loki en el patio", "fecha": "13 Nov 2026"},
-            {"titulo": "Loki banado", "fecha": "12 Nov 2026"},
-            {"titulo": "Loki durmiendo", "fecha": "11 Nov 2026"},
-            {"titulo": "Loki y Luna jugando", "fecha": "10 Nov 2026"},
-            {"titulo": "Loki en el campo", "fecha": "9 Nov 2026"},
-        ]
+        "loki_nombre": "Loki",
+        "loki_raza": "Siberian Husky",
+        "loki_edad": "2 años",
+        "p0": "Cumpleaños de Loki",
+        "p1": "Primera vez que corrió",
+        "p2": "Primera vez que huyó",
+        "p3": "Primera vez en la nieve",
+        "pestana_activa": "Cumpleaños de Loki",
+        "fotos_count": "25 / 25 fotos",
+        "camara_porcentaje": "92% ES LOKI",
+        "camara_coincide": "Coincide: ojos azules, mancha en nariz",
+        "camara_verificada": "FOTO VERIFICADA - Tomada con FOTO ARES - Parque Fundidora Monterrey, Hoy 13 Nov 2026 12:35 pm",
+        "alerta_titulo": "ALERTA - Loki Perdido",
+        "alerta_busca": "SE BUSCA LOKI",
+        "alerta_detalle": "Perdido hace 2 horas",
+        "alerta_ubicacion": "Ultima ubicacion - Parque Fundidora Monterrey",
+        "alerta_collar": "Collar azul",
+        "alerta_vecinos": "Alerta enviada a 124 vecinos cerca de ti",
+        "alerta_radio": "Radio 5 km",
+        "chat_titulo": "Chat - Loki - 92% coincidencia",
+        "chat_msg1": "Creo que vi a Loki en Parque Fundidora",
+        "chat_msg2": "¿Sigue ahí?",
+        "chat_msg3": "Sí, corrió hacia el estacionamiento, te comparto ubicación",
+        "chat_ubicacion": "Parque Fundidora, Monterrey",
+        "chat_verificada": "FOTO VERIFICADA - 92% ES LOKI - Parque Fundidora - Hoy 12:35 pm"
     }
 
 def cargar():
     if os.path.exists(ARCHIVO):
         try:
-            with open(ARCHIVO, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return datos_nuevos()
-    return datos_nuevos()
-
+            with open(ARCHIVO,"r",encoding="utf-8") as f: return json.load(f)
+        except: return nuevos()
+    return nuevos()
 def guardar():
-    with open(ARCHIVO, "w", encoding="utf-8") as f:
-        json.dump(D, f, ensure_ascii=False)
-
+    with open(ARCHIVO,"w",encoding="utf-8") as f: json.dump(D,f,ensure_ascii=False)
 D = cargar()
+HUSKY = "https://images.dog.ceo/breeds/husky/n02110185_14112.jpg"
 
 HTML = """
-<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOTO ARES</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FOTO ARES</title>
 <style>
-body{background:#0f0f0f;color:#fff;font-family:Arial;text-align:center;padding:0;margin:0;padding-bottom:30px}
-.top{background:#1a1a1a;padding:15px;position:sticky;top:0;z-index:10}
-.top h1{color:#ffcc00;margin:0;font-size:26px}
-.nav a{color:#ffcc00;margin:0 6px;font-weight:bold;text-decoration:none;font-size:14px}
-.card{background:#222;padding:12px;border-radius:18px;margin:15px auto;max-width:420px}
-.card img{width:100%;height:280px;object-fit:cover;border-radius:14px;background:#444}
-.card.grande img{height:340px}
-input{width:92%;padding:12px;border-radius:10px;border:0;margin:6px 0;background:#333;color:#fff;font-size:15px}
-button{background:#ffcc00;border:0;padding:12px 20px;border-radius:12px;font-weight:bold;font-size:16px;margin:6px}
-.btn-mas{background:#ffcc00;color:#000;font-size:28px;width:55px;height:55px;border-radius:50%;line-height:1}
-.box{background:#333;padding:10px;border-radius:10px;margin-top:10px}
-label{color:#ffcc00;font-size:13px}
-.alerta-box{background:#ff2222;padding:20px;border-radius:18px;margin:15px auto;max-width:420px}
-.chat-box{background:#222;padding:12px;border-radius:18px;margin:15px auto;max-width:420px;text-align:left}
-.msg{background:#333;padding:10px;border-radius:12px;margin:8px 0}
-.msg b{color:#ffcc00}
-.scroll{max-height:600px;overflow-y:auto;padding:5px}
+body{background:#f5f5f5;color:#111;font-family:Arial;margin:0;padding-bottom:90px}
+.top{background:#fff;padding:12px;text-align:center;box-shadow:0 2px 8px #0002;position:sticky;top:0;z-index:10}
+.nav{display:flex;justify-content:space-around;background:#fff;padding:10px 0;position:fixed;bottom:0;left:0;right:0;z-index:20;border-top:1px solid #eee}
+.nav a{color:#111;text-decoration:none;font-size:13px;text-align:center}
+.nav a.activo{color:#2563eb;font-weight:bold}
+.card{background:#fff;border-radius:16px;margin:14px auto;max-width:430px;padding:14px;box-shadow:0 2px 10px #0001}
+.card img{width:100%;height:280px;object-fit:cover;border-radius:12px}
+input,textarea{width:93%;padding:11px;border-radius:10px;border:1px solid #ddd;margin:6px 0;font-size:15px;background:#f9f9f9}
+button{padding:12px 18px;border-radius:20px;border:0;font-weight:bold;font-size:15px;margin:5px}
+.btn-azul{background:#2563eb;color:#fff;width:95%}
+.btn-rojo{background:#e11d48;color:#fff;width:95%}
+.btn-verde{background:#16a34a;color:#fff}
+.btn-blanco{background:#fff;border:1px solid #2563eb;color:#2563eb}
+.edit{background:#dbeafe;color:#2563eb;padding:8px;border-radius:20px;font-size:13px;display:block;text-align:center;margin:8px 0}
+label{color:#2563eb;font-size:12px;font-weight:bold}
+.pill{display:inline-block;background:#e8e8e8;padding:8px 10px;border-radius:10px;margin:4px;font-size:13px}
+.msg{background:#eee;padding:10px;border-radius:12px;margin:8px 0;text-align:left}
+.msg.der{background:#2563eb;color:#fff;margin-left:40px}
+.verde{background:#16a34a;color:#fff;padding:12px;border-radius:12px}
+.rojo-banner{background:#e11d48;color:#fff;padding:14px;border-radius:12px;font-size:24px;font-weight:bold;text-align:center}
 </style></head><body>
-<div class="top"><h1>🐶 FOTO ARES</h1><div class="nav"><a href="/">MANADA</a><a href="/camara">CAMARA</a><a href="/momentos">MOMENTOS</a><a href="/alerta">ALERTA</a><a href="/chat">CHAT</a></div></div>
 
-{% if page == 'manada' %}
-<h2>🐾 Mi Manada</h2>
-<!-- 1. MANADA - Solo Loki en grande -->
-<div class="card grande">
-<img src="/foto/manada.jpg" onerror="this.onerror=null;this.src='{{ D.perros[0].foto }}'">
-<h2>{{ D.perros[0].nombre }} 🐾</h2>
-<p>{{ D.perros[0].raza }} - {{ D.perros[0].edad }}</p>
-</div>
+{% if page=='manada' %}
+<div class="top"><h1>FOTO ARES</h1></div>
+<div class="card"><img src="/foto/manada.jpg" onerror="this.src='{{HUSKY}}'"><h2>{{D.loki_nombre}} - {{D.loki_raza}}</h2>
+<form method="POST" action="/subir" enctype="multipart/form-data"><input type="hidden" name="cual" value="manada"><input type="file" name="foto" required><button class="btn-azul">SUBIR FOTO MANADA</button></form></div>
+{% endif %}
 
-<form method="POST" action="/guardar_manada">
-{% for p in D.perros %}
-<div class="card">
-<img src="/foto/manada.jpg" onerror="this.onerror=null;this.src='{{ p.foto }}'">
-<h3>{{ p.nombre }}</h3><p>{{ p.raza }} - {{ p.edad }}</p>
-<div class="box"><label>✏️ Editar aqui mismo</label>
-<input name="n{{ loop.index0 }}" value="{{ p.nombre }}">
-<input name="r{{ loop.index0 }}" value="{{ p.raza }}">
-<input name="e{{ loop.index0 }}" value="{{ p.edad }}">
-</div></div>
-{% endfor %}
-<button type="submit">💾 GUARDAR MANADA</button>
+{% if page=='momentos' %}
+<div class="top"><h1>Momentos de Loki</h1><span class="edit">✏️ Modo Edición activado - Todo se edita aqui</span></div>
+<div class="card"><h3>{{D.pestana_activa}} - {{D.fotos_count}}</h3><div>{% for p in [D.p0,D.p1,D.p2,D.p3] %}<span class="pill">{{p}} ✏️</span>{% endfor %}<span class="pill" style="background:#fde68a">♾️ Nueva Pestaña - INFINITA</span></div><p>♾️ / ♾️ fotos - ♾️ +999</p>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">{% for i in range(9) %}<img src="/foto/manada.jpg" onerror="this.src='{{HUSKY}}'" style="height:90px">{% endfor %}</div>
+<center><button class="btn-azul">Agregar Foto +</button><button class="btn-blanco">Cambiar nombre</button></center></div>
+{% endif %}
+
+{% if page=='camara' %}
+<div class="top"><h1>FOTO ARES 📷 - Camara</h1></div>
+<div class="card" style="background:#111;color:#fff"><img src="/foto/camara.jpg" onerror="this.src='{{HUSKY}}'"><div style="background:#000a;padding:12px;border-radius:12px;text-align:center"><b style="font-size:28px">{{D.camara_porcentaje}}</b><br>{{D.camara_coincide}}</div><br><div class="verde">✅ {{D.camara_verificada}}</div><br><center><button class="btn-verde">✅ Confirmar Avistamiento</button><button class="btn-blanco">Tomar otra foto</button></center>
+<form method="POST" action="/subir" enctype="multipart/form-data"><input type="hidden" name="cual" value="camara"><input type="file" name="foto" required><button class="btn-azul">SUBIR FOTO CAMARA</button></form></div>
+{% endif %}
+
+{% if page=='alerta' %}
+<div class="top"><h1>FOTO ARES</h1></div>
+<div class="card"><h2>{{D.alerta_titulo}}</h2><div class="rojo-banner">⚠️ {{D.alerta_busca}}</div><br><div style="background:#cfe8d8;height:150px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:bold;text-align:center">📍 Parque Fundidora<br>{{D.alerta_radio}}</div>
+<p>🕐 {{D.alerta_detalle}}</p><p>📍 {{D.alerta_ubicacion}}</p><p>🎗️ {{D.alerta_collar}}</p><div style="background:#fee2e2;padding:10px;border-radius:10px">📢 {{D.alerta_vecinos}}</div><br><button class="btn-rojo">📢 Activar Alerta para todos</button><br><button class="btn-blanco">📤 Compartir Alerta</button><button class="btn-blanco">❗ Reportar Avistamiento</button></div>
+{% endif %}
+
+{% if page=='chat' %}
+<div class="top"><h1>{{D.chat_titulo}}</h1><p>FOTO ARES • En vivo • Seguro</p></div>
+<div class="card"><h3>Loki • Siberian Husky perdido - Activo ahora</h3>
+<div class="msg"><b>@LUNA-2310 • finder</b><br>{{D.chat_msg1}}</div>
+<div class="msg der"><b>@MANU-8472 • propietario</b><br>{{D.chat_msg2}}</div>
+<div class="msg"><b>@LUNA-2310 • finder</b><br>{{D.chat_msg3}}</div>
+<div class="msg">📍 {{D.chat_ubicacion}}<br><small>Hace 2 min • Compartir ubicación en vivo</small></div>
+<div class="msg" style="border:1px solid #16a34a">✅ {{D.chat_verificada}}<br><img src="/foto/chat.jpg" onerror="this.src='{{HUSKY}}'" style="height:150px"></div>
+<input placeholder="Escribe un mensaje..."><br><center><button class="btn-azul">➤ Enviar</button></center></div>
+{% endif %}
+
+<!-- ===== EDITAR TODO DESDE LA APP - APARECE EN TODAS LAS SECCIONES ===== -->
+<div class="card" style="border:2px solid #2563eb">
+<h2 style="color:#2563eb">✏️ EDITAR TODO DESDE AQUI</h2>
+<p>Toca cualquier cuadrito, cambia el texto y dale GUARDAR. Ya queda cambiado sin entrar a GitHub.</p>
+<form method="POST" action="/guardar">
+<label>Nombre de Loki</label><input name="loki_nombre" value="{{D.loki_nombre}}">
+<label>Raza</label><input name="loki_raza" value="{{D.loki_raza}}">
+<label>Edad</label><input name="loki_edad" value="{{D.loki_edad}}">
+<label>Pestaña 1 - Momentos</label><input name="p0" value="{{D.p0}}">
+<label>Pestaña 2</label><input name="p1" value="{{D.p1}}">
+<label>Pestaña 3</label><input name="p2" value="{{D.p2}}">
+<label>Pestaña 4</label><input name="p3" value="{{D.p3}}">
+<label>Pestaña activa / Título Momentos</label><input name="pestana_activa" value="{{D.pestana_activa}}">
+<label>Conteo fotos</label><input name="fotos_count" value="{{D.fotos_count}}">
+<label>Camara - Porcentaje</label><input name="camara_porcentaje" value="{{D.camara_porcentaje}}">
+<label>Camara - Coincide</label><input name="camara_coincide" value="{{D.camara_coincide}}">
+<label>Camara - Texto verde verificado</label><textarea name="camara_verificada">{{D.camara_verificada}}</textarea>
+<label>Alerta - Título</label><input name="alerta_titulo" value="{{D.alerta_titulo}}">
+<label>Alerta - Banner rojo</label><input name="alerta_busca" value="{{D.alerta_busca}}">
+<label>Alerta - Detalle</label><input name="alerta_detalle" value="{{D.alerta_detalle}}">
+<label>Alerta - Ubicación</label><input name="alerta_ubicacion" value="{{D.alerta_ubicacion}}">
+<label>Alerta - Collar</label><input name="alerta_collar" value="{{D.alerta_collar}}">
+<label>Alerta - Vecinos</label><input name="alerta_vecinos" value="{{D.alerta_vecinos}}">
+<label>Alerta - Radio</label><input name="alerta_radio" value="{{D.alerta_radio}}">
+<label>Chat - Título</label><input name="chat_titulo" value="{{D.chat_titulo}}">
+<label>Chat - Mensaje Luna 1</label><textarea name="chat_msg1">{{D.chat_msg1}}</textarea>
+<label>Chat - Mensaje Manu</label><textarea name="chat_msg2">{{D.chat_msg2}}</textarea>
+<label>Chat - Mensaje Luna 2</label><textarea name="chat_msg3">{{D.chat_msg3}}</textarea>
+<label>Chat - Ubicación</label><input name="chat_ubicacion" value="{{D.chat_ubicacion}}">
+<label>Chat - Foto verificada</label><textarea name="chat_verificada">{{D.chat_verificada}}</textarea>
+<button class="btn-azul" type="submit">💾 GUARDAR TODO - YA QUEDO</button>
 </form>
-
-<div class="card">
-<h3>➕ Agregar Perro</h3>
-<form method="POST" action="/agregar_perro">
-<input name="nombre" placeholder="Nombre del perro" required>
-<input name="raza" placeholder="Raza" required>
-<input name="edad" placeholder="Edad ej: 1 año" required>
-<button type="submit">+ AGREGAR</button>
-</form>
+<p style="font-size:13px;color:#666">Al darle GUARDAR, te regresa a la misma sección y ya se ve el cambio.</p>
 </div>
-<div><button class="btn-mas" onclick="window.scrollTo(0,document.body.scrollHeight)">+</button></div>
-{% endif %}
 
-{% if page == 'camara' %}
-<h2>📸 Camara</h2>
-<div class="card grande">
-<img src="/foto/manada.jpg" onerror="this.onerror=null;this.src='https://images.dog.ceo/breeds/husky/n02110185_14112.jpg'">
-<p>🔴 EN VIVO - {{ D.camara }}</p>
-<button onclick="alert('Camara activada')">▶ Ver Camara</button>
-<form method="POST" action="/guardar_texto"><div class="box"><label>✏️ Editar aqui mismo</label><input name="v" value="{{ D.camara }}"><input type="hidden" name="t" value="camara"><button type="submit">GUARDAR</button></div></form>
+<div class="nav">
+<a href="/" class="{% if page=='manada' %}activo{% endif %}">🐾<br>Manada</a>
+<a href="/camara" class="{% if page=='camara' %}activo{% endif %}">📷<br>Camara</a>
+<a href="/momentos" class="{% if page=='momentos' %}activo{% endif %}">✨<br>Momentos</a>
+<a href="/alerta" class="{% if page=='alerta' %}activo{% endif %}">🔔<br>Alerta</a>
+<a href="/chat" class="{% if page=='chat' %}activo{% endif %}">💬<br>Chat</a>
 </div>
-<div class="card"><h3>📸 Subir Foto de Camara</h3><form method="POST" action="/subir" enctype="multipart/form-data"><input type="file" name="foto" accept="image/*" required><button type="submit">SUBIR FOTO</button></form></div>
-{% endif %}
-
-{% if page == 'momentos' %}
-<h2>✨ Momentos - Pestaña Infinita</h2>
-<div class="scroll">
-<form method="POST" action="/guardar_momentos">
-{% for m in D.momentos %}
-<div class="card"><img src="/foto/manada.jpg" onerror="this.onerror=null;this.src='https://images.dog.ceo/breeds/husky/n02110185_14112.jpg'"><h3>{{ m.titulo }}</h3><p>{{ m.fecha }}</p>
-<div class="box"><label>✏️ Editar aqui mismo</label><input name="t{{ loop.index0 }}" value="{{ m.titulo }}"><input name="f{{ loop.index0 }}" value="{{ m.fecha }}"></div></div>
-{% endfor %}
-<button type="submit">💾 GUARDAR MOMENTOS</button></form>
-{% for i in range(5) %}
-<div class="card"><img src="https://images.dog.ceo/breeds/husky/n02110185_14112.jpg"><h3>Momento extra {{ i+1 }}</h3><p>Desliza para ver mas...</p></div>
-{% endfor %}
-<p>⬇️ Sigue bajando, es infinita ⬇️</p>
-</div>
-{% endif %}
-
-{% if page == 'alerta' %}
-<h2>🔴 Alerta</h2>
-<div class="alerta-box">
-<h1>🚨 ALERTA</h1>
-<p style="font-size:18px">{{ D.alerta }}</p>
-<button style="background:#fff;color:#ff2222" onclick="alert('¡Alerta enviada a Manu!')">🚨 ACTIVAR ALERTA</button>
-</div>
-<div class="card"><form method="POST" action="/guardar_texto"><div class="box"><label>✏️ Editar aqui mismo</label><input name="v" value="{{ D.alerta }}"><input type="hidden" name="t" value="alerta"><button type="submit">GUARDAR</button></div></form></div>
-{% endif %}
-
-{% if page == 'chat' %}
-<h2>💬 Chat Manada</h2>
-<div class="chat-box">
-<div class="msg"><b>@LUNA-2310:</b> Hola Manu! Loki ya comió 🐶</div>
-<div class="msg"><b>@MANU-8472:</b> Perfecto, gracias Luna!</div>
-<div class="msg"><b>@LUNA-2310:</b> Está jugando en el patio ahora ✨</div>
-<div class="msg"><b>@MANU-8472:</b> Le tomo foto ahorita 📸</div>
-<p style="text-align:center;color:#aaa">{{ D.chat }}</p>
-<input placeholder="Escribe como @MANU-8472..."><br><center><button>Enviar</button></center>
-<form method="POST" action="/guardar_texto"><div class="box"><label>✏️ Editar aqui mismo</label><input name="v" value="{{ D.chat }}"><input type="hidden" name="t" value="chat"><button type="submit">GUARDAR</button></div></form>
-</div>
-{% endif %}
 </body></html>
 """
 
 @app.route('/foto/<n>')
 def foto(n):
-    if os.path.exists(n):
-        return send_from_directory('.', n)
-    return redirect("https://images.dog.ceo/breeds/husky/n02110185_14112.jpg")
+    p = n + ".jpg"
+    if os.path.exists(p): return send_from_directory('.', p)
+    return redirect(HUSKY)
 
 @app.route('/')
-def manada(): return render_template_string(HTML, page='manada', D=D)
+def a(): return render_template_string(HTML, page='manada', D=D, HUSKY=HUSKY)
 @app.route('/camara')
-def camara(): return render_template_string(HTML, page='camara', D=D)
+def b(): return render_template_string(HTML, page='camara', D=D, HUSKY=HUSKY)
 @app.route('/momentos')
-def momentos(): return render_template_string(HTML, page='momentos', D=D)
+def c(): return render_template_string(HTML, page='momentos', D=D, HUSKY=HUSKY)
 @app.route('/alerta')
-def alerta(): return render_template_string(HTML, page='alerta', D=D)
+def d(): return render_template_string(HTML, page='alerta', D=D, HUSKY=HUSKY)
 @app.route('/chat')
-def chat(): return render_template_string(HTML, page='chat', D=D)
+def e(): return render_template_string(HTML, page='chat', D=D, HUSKY=HUSKY)
 
 @app.route('/subir', methods=['POST'])
 def subir():
+    cual = request.form.get('cual','manada')
     f = request.files.get('foto')
-    if f: f.save('manada.jpg')
-    return redirect('/')
+    if f: f.save(f'{cual}.jpg')
+    return redirect(request.referrer or '/')
 
-@app.route('/guardar_manada', methods=['POST'])
-def gm():
-    for i in range(len(D['perros'])):
-        D['perros'][i]['nombre'] = request.form.get(f'n{i}', D['perros'][i]['nombre'])
-        D['perros'][i]['raza'] = request.form.get(f'r{i}', D['perros'][i]['raza'])
-        D['perros'][i]['edad'] = request.form.get(f'e{i}', D['perros'][i]['edad'])
-    guardar()
-    return redirect('/')
-
-@app.route('/agregar_perro', methods=['POST'])
-def agregar():
-    nombre = request.form.get('nombre')
-    if nombre:
-        D['perros'].append({"nombre": nombre, "raza": request.form.get('raza','Husky'), "edad": request.form.get('edad','1 año'), "foto": "https://images.dog.ceo/breeds/husky/n02110185_14112.jpg"})
-        guardar()
-    return redirect('/')
-
-@app.route('/guardar_momentos', methods=['POST'])
-def gmo():
-    for i in range(len(D['momentos'])):
-        D['momentos'][i]['titulo'] = request.form.get(f't{i}', D['momentos'][i]['titulo'])
-        D['momentos'][i]['fecha'] = request.form.get(f'f{i}', D['momentos'][i]['fecha'])
-    guardar()
-    return redirect('/momentos')
-
-@app.route('/guardar_texto', methods=['POST'])
+@app.route('/guardar', methods=['POST'])
 def gt():
-    t = request.form.get('t'); v = request.form.get('v')
-    if t == 'camara': D['camara'] = v; guardar(); return redirect('/camara')
-    if t == 'alerta': D['alerta'] = v; guardar(); return redirect('/alerta')
-    if t == 'chat': D['chat'] = v; guardar(); return redirect('/chat')
-    return redirect('/')
+    for k in list(D.keys()):
+        if request.form.get(k): D[k] = request.form.get(k)
+    guardar()
+    return redirect(request.referrer or '/')
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__=='__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT',5000)))
