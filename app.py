@@ -1,248 +1,103 @@
-import streamlit as st
-from ddgs import DDGS
-from difflib import SequenceMatcher
-import re, json, os, base64, io
-import speech_recognition as sr
-from pydub import AudioSegment
-from gtts import gTTS
+# FOTO ARES - Versión Web con Python + Flask
+# Para abrir en tu celular
+from flask import Flask, render_template_string
 
-st.set_page_config(page_title="ManuBot", page_icon="🔧", layout="centered")
+app = Flask(__name__)
 
-# --- ESTILO: BOTONES GRANDES Y DIFERENTES ---
-st.markdown("""
+# Tus perritos
+perros = [
+    {"nombre": "ARES", "color": "Gris con blanco", "edad": "2 años y medio", "estado": "En casa"},
+    {"nombre": "ATENA", "color": "Negro con blanco", "edad": "1 año", "estado": "En casa"},
+]
+
+momentos = [
+    {"nombre": "Cumpleaños de Ares", "desc": "Celebramos su primer año con pastel.", "fotos": 25, "limite": 25},
+    {"nombre": "Primera vez que corrió", "desc": "Corrió 2 km en Parque Fundidora.", "fotos": 25, "limite": 25},
+    {"nombre": "Primera vez que huyó", "desc": "Se escapó por la puerta, lo encontramos en 1 hora.", "fotos": 25, "limite": 25},
+    {"nombre": "Primera vez en la nieve", "desc": "Jugó en la nieve por primera vez.", "fotos": 25, "limite": 25},
+    {"nombre": "Nueva Pestaña - INFINITA ♾️", "desc": "Sin límite de fotos. Fotos ilimitadas.", "fotos": 999, "limite": "♾️"},
+]
+
+HTML = """
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOTO ARES</title>
 <style>
-    .stButton > button { height: 70px !important; font-size: 20px !important; font-weight: bold !important; border-radius: 20px !important; color: white !important; border: none !important; }
-    div[data-testid="stHorizontalBlock"] > div:nth-child(1) button { background-color: #22c55e !important; }
-    div[data-testid="stHorizontalBlock"] > div:nth-child(2) button { background-color: #f97316 !important; }
-    div[data-testid="stHorizontalBlock"] > div:nth-child(3) button { background-color: #ef4444 !important; }
-    .guardar button { background-color: #3b82f6 !important; }
-    .stTextInput > div > div > input { font-size: 18px !important; height: 55px !important; }
-</style>
-""", unsafe_allow_html=True)
+body{font-family:Arial;background:#111;color:white;margin:0;padding:15px;padding-bottom:80px}
+.card{background:white;color:black;border-radius:15px;padding:15px;margin:10px 0}
+.btn{display:block;background:#e63946;color:white;text-align:center;padding:13px;border-radius:12px;text-decoration:none;font-weight:bold;margin:8px 0}
+.btn-dark{background:#1e293b}.btn-green{background:#16a34a}.btn-gold{background:#facc15;color:black}
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;display:flex;justify-content:space-around;padding:12px}
+.nav a{color:#111;text-decoration:none;font-weight:bold;font-size:13px}
+.badge{background:#e63946;color:white;padding:3px 8px;border-radius:8px;font-size:12px}
+img{width:100%;border-radius:12px}
+h1{font-size:24px}
+</style></head><body>
+<h1>🐾 FOTO ARES</h1>
 
-st.title("🔧 ManuBot")
-st.write("Tu compa que te escucha Y te contesta hablando.")
+{% if page == 'manada' %}
+<h2>Manada</h2><p style="color:#aaa">Tu manada se adapta a ti.</p>
+{% for p in perros %}
+<div class="card"><img src="https://images.unsplash.com/photo-1605568427561-40e23f9fa5ed?w=800"><h2>{{p.nombre}} <span class="badge">{{p.estado}}</span></h2><p>{{p.color}} - {{p.edad}}</p></div>
+{% endfor %}
+<div class="card"><b>+ Agregar otro perro</b><br><input style="width:95%;padding:10px;margin:8px 0;border-radius:10px" placeholder="Nombre ej: Luna"><a class="btn btn-dark" href="#">Agregar perro +</a></div>
 
-# --- BOTON PARA PRENDER / APAGAR LA VOZ DE MANUBOT ---
-hablar = st.toggle("🔊 Que ManuBot me conteste con voz", value=True)
-st.write("Si lo apagas, solo te escribe. Si lo prendes, también te habla.")
+{% elif page == 'camara' %}
+<h2>📸 Cámara</h2>
+<div class="card"><img src="https://images.unsplash.com/photo-1605568427561-40e23f9fa5ed?w=800"><h1 style="font-size:32px">92% ES ARES</h1><p>Coincide: ojos azules, mancha en nariz</p><p style="background:#16a34a;color:white;padding:10px;border-radius:10px">✅ FOTO VERIFICADA - Tomada con FOTO ARES</p><p>📍 Parque Fundidora Monterrey, Hoy 13 Nov 2026 12:35 pm<br>Hace 2 min • FOTO FRESCA VE AHORA</p><a class="btn btn-green" href="#">✅ Confirmar Avistamiento</a></div>
 
-# --- GUARDADO PERMANENTE ---
-ARCHIVO_MEMORIA = "memoria_manubot.json"
+{% elif page == 'momentos' %}
+<h2>📂 Momentos de Ares</h2>
+{% for m in momentos %}
+<div class="card"><b>{{m.nombre}}</b><p>{{m.desc}}</p><b>{{m.fotos}} / {{m.limite}} fotos</b><br><a class="btn btn-green" href="#">Agregar Foto +</a><a class="btn btn-dark" href="#">✏️ Cambiar nombre</a></div>
+{% endfor %}
 
-def cargar_memoria():
-    if os.path.exists(ARCHIVO_MEMORIA):
-        try:
-            with open(ARCHIVO_MEMORIA, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return {}
-    return {
-        "hola": {"texto": "Hola Manu! ¿Qué onda? ¿Qué andamos arreglando hoy?", "imagen": None},
-        "como estas": {"texto": "Bien Manu, aquí jalando contigo. ¿Y tú cómo andas?", "imagen": None},
-        "quien eres": {"texto": "Soy ManuBot, tu compa del taller que aprende de ti.", "imagen": None},
-    }
+{% elif page == 'alerta' %}
+<div class="card" style="background:#e63946;color:white;text-align:center"><h1>⚠️ SE BUSCA ARES</h1></div>
+<div class="card"><b>Detalles</b><p>🕐 Perdido hace 2 horas<br>📍 Parque Fundidora Monterrey<br>🔵 Collar azul<br>📍 Mapa: Radio 5 km</p></div>
+<div class="card"><b>📢 Alerta enviada a 124 vecinos cerca de ti</b><p>Los miembros cercanos han sido notificados ahora</p></div>
+<a class="btn" href="#">📢 Activar Alerta para todos</a>
+<a class="btn btn-dark" href="#">Compartir Alerta</a>
 
-def guardar_memoria():
-    with open(ARCHIVO_MEMORIA, "w", encoding="utf-8") as f:
-        json.dump(st.session_state.aprendido, f, ensure_ascii=False, indent=2)
+{% elif page == 'chat' %}
+<h2>💬 Chat - Alerta Ares</h2>
+<div class="card"><b>@LUNA-2310</b><p>Lo vi cerca de la puerta 4 hace 10 min, husky con collar rojo!</p></div>
+<div class="card" style="background:#111;color:white"><b>Tú</b><p>Voy para allá ahora, llevo croquetas</p></div>
+<input style="width:95%;padding:12px;border-radius:10px" placeholder="Escribe un mensaje..."><a class="btn btn-dark" href="#">Enviar</a>
+{% endif %}
 
-def imagen_a_texto(imagen_file):
-    return base64.b64encode(imagen_file.getvalue()).decode("utf-8")
+<div class="nav">
+<a href="/">Manada</a><a href="/camara">Cámara</a><a href="/momentos">Momentos</a><a href="/alerta">Alerta</a><a href="/chat">Chat</a>
+</div>
+</body></html>
+"""
 
-def texto_a_imagen(texto_b64):
-    return base64.b64decode(texto_b64)
+@app.route('/')
+def manada():
+    return render_template_string(HTML, page='manada', perros=perros, momentos=momentos)
 
-# --- AQUÍ ESTÁ LO NUEVO, MANU: QUE LEA SUS RESPUESTAS ---
-def manubot_habla(texto):
-    # Limpia el texto para que suene bien, sin links ni símbolos raros
-    texto_limpio = re.sub(r'https?://\S+', '', texto)
-    texto_limpio = re.sub(r'[*#•]', '', texto_limpio)
-    texto_limpio = texto_limpio[:500]  # Solo lee los primeros 500 caracteres para que no se tarde
-    if texto_limpio.strip() == "":
-        return None
-    try:
-        tts = gTTS(text=texto_limpio, lang='es', slow=False)
-        buf = io.BytesIO()
-        tts.write_to_fp(buf)
-        buf.seek(0)
-        return buf
-    except:
-        return None
+@app.route('/camara')
+def camara():
+    return render_template_string(HTML, page='camara', perros=perros, momentos=momentos)
 
-if "aprendido" not in st.session_state:
-    st.session_state.aprendido = cargar_memoria()
-if "ultima_pregunta" not in st.session_state:
-    st.session_state.ultima_pregunta = ""
-if "ultima_respuesta" not in st.session_state:
-    st.session_state.ultima_respuesta = "Hola Manu, soy ManuBot. Háblame y yo te contesto con voz."
-if "ultima_imagen_respuesta" not in st.session_state:
-    st.session_state.ultima_imagen_respuesta = None
-if "modo_ensenar" not in st.session_state:
-    st.session_state.modo_ensenar = False
-if "texto_voz" not in st.session_state:
-    st.session_state.texto_voz = ""
-if "audio_respuesta" not in st.session_state:
-    st.session_state.audio_respuesta = None
+@app.route('/momentos')
+def momentos_page():
+    return render_template_string(HTML, page='momentos', perros=perros, momentos=momentos)
 
-# --- INTELIGENCIA PROPIA ---
-def parecido(a, b):
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+@app.route('/alerta')
+def alerta():
+    return render_template_string(HTML, page='alerta', perros=perros, momentos=momentos)
 
-def buscar_internet(pregunta):
-    try:
-        with DDGS() as ddgs:
-            resultados = list(ddgs.text(pregunta, max_results=4))
-            if resultados:
-                texto = ""
-                for r in resultados:
-                    texto += f"• **{r['title']}**: {r['body']}\n\nFuente: {r['href']}\n\n"
-                return texto
-            return ""
-    except:
-        return ""
+@app.route('/chat')
+def chat():
+    return render_template_string(HTML, page='chat', perros=perros, momentos=momentos)
 
-def inteligencia_manubot(pregunta):
-    texto_bajo = pregunta.lower().strip()
-    if any(p in texto_bajo for p in ["llover", "lluvia", "clima", "pronostico", "pronóstico", "tiempo", "calor", "frio"]):
-        info = buscar_internet("clima Monterrey hoy pronóstico lluvia")
-        if info:
-            return f"Manu, esto dice internet del clima ahorita:\n\n{info}", None
-    if any(p in texto_bajo for p in ["dolar", "dólar"]):
-        info = buscar_internet("precio dólar hoy México")
-        if info:
-            return f"Manu, esto encontré del dólar hoy:\n\n{info}", None
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
+"""
 
-    mejor_puntaje = 0
-    mejor_dato = None
-    for clave, dato in st.session_state.aprendido.items():
-        puntaje = parecido(texto_bajo, clave)
-        for palabra in clave.split():
-            if len(palabra) > 3 and palabra in texto_bajo:
-                puntaje += 0.3
-        if puntaje > mejor_puntaje:
-            mejor_puntaje = puntaje
-            mejor_dato = dato
+**2. Instala Flask y córrelo:**
 
-    if mejor_puntaje > 0.45 and mejor_dato:
-        return mejor_dato.get("texto", ""), mejor_dato.get("imagen", None)
-
-    info = buscar_internet(pregunta)
-    if info:
-        nuevo = {"texto": f"Esto encontré en internet, Manu:\n\n{info}", "imagen": None}
-        st.session_state.aprendido[texto_bajo] = nuevo
-        guardar_memoria()
-        return nuevo["texto"], None
-    return "Mmm Manu, no encontré eso. Enséñame picándole a 📚 ENSEÑAME.", None
-
-# --- VOZ: TÚ LE HABLAS ---
-st.subheader("🎤 Pregúntame con tu voz")
-audio = st.audio_input("Pícale al micrófono y habla, Manu:")
-if audio is not None:
-    try:
-        sonido = AudioSegment.from_file(audio)
-        buf = io.BytesIO()
-        sonido.export(buf, format="wav")
-        buf.seek(0)
-        r = sr.Recognizer()
-        with sr.AudioFile(buf) as source:
-            datos_audio = r.record(source)
-            texto_detectado = r.recognize_google(datos_audio, language="es-MX")
-            st.session_state.texto_voz = texto_detectado
-            st.success(f"Te escuché, Manu. Dijiste: **{texto_detectado}**")
-    except:
-        st.warning("No te entendí bien, Manu. Intenta de nuevo.")
-
-# --- SOLO SE VE LA ÚLTIMA PLÁTICA + AQUÍ HABLA MANUBOT ---
-st.divider()
-if st.session_state.ultima_imagen_respuesta:
-    st.image(texto_a_imagen(st.session_state.ultima_imagen_respuesta), caption="Esto te respondo con foto, Manu", use_container_width=True)
-if st.session_state.ultima_pregunta:
-    st.markdown(f"**Tú:** {st.session_state.ultima_pregunta}")
-st.markdown(f"**ManuBot:** {st.session_state.ultima_respuesta}")
-
-# AQUÍ SUENA SU VOZ, MANU
-if hablar and st.session_state.audio_respuesta is not None:
-    st.audio(st.session_state.audio_respuesta, format="audio/mp3", autoplay=True)
-    st.write("🔊 ManuBot te está hablando...")
-
-st.divider()
-
-valor_inicial = st.session_state.texto_voz if st.session_state.texto_voz else ""
-pregunta = st.text_input("💬 Escríbele o pega un link:", value=valor_inicial, placeholder="Ej: hola, ¿va a llover?", key="caja_principal")
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    boton_enviar = st.button("➤  ENVIAR\nPREGUNTA", use_container_width=True)
-with col2:
-    boton_ensenar = st.button("📚  ENSEÑAME\nQUE APRENDA", use_container_width=True)
-with col3:
-    boton_limpiar = st.button("🗑️  BORRAR\nPLÁTICA", use_container_width=True)
-
-imagen_pregunta = st.file_uploader("📷 Subir foto para preguntar", type=["jpg", "jpeg", "png", "webp"])
-if imagen_pregunta is not None:
-    st.session_state.ultima_pregunta = "Te mandé una foto, ManuBot"
-    st.session_state.ultima_respuesta = "Ya vi tu foto, Manu. ¿Qué tiene? ¿Qué le falla? Dime qué es y te ayudo."
-    st.session_state.ultima_imagen_respuesta = imagen_a_texto(imagen_pregunta)
-    # TAMBIÉN HABLA CUANDO VE TU FOTO
-    if hablar:
-        st.session_state.audio_respuesta = manubot_habla(st.session_state.ultima_respuesta)
-    st.session_state.texto_voz = ""
-    st.rerun()
-
-if boton_limpiar:
-    st.session_state.ultima_pregunta = ""
-    st.session_state.ultima_respuesta = "Listo Manu, ya borré la plática. ¿Qué me preguntas ahora?"
-    st.session_state.ultima_imagen_respuesta = None
-    st.session_state.audio_respuesta = None
-    st.session_state.texto_voz = ""
-    st.rerun()
-
-if boton_ensenar:
-    st.session_state.modo_ensenar = not st.session_state.modo_ensenar
-    st.rerun()
-
-if st.session_state.modo_ensenar:
-    st.subheader("📚 Enséñame, Manu - Ya no se borra")
-    pregunta_ensenar = st.text_input("1️⃣ PREGUNTA / Palabra clave:", placeholder="Ej: que es un alternador", key="p_ens")
-    respuesta_ensenar = st.text_area("2️⃣ RESPUESTA que debo dar:", placeholder="Ej: El alternador es el que carga la batería...", key="r_ens")
-    st.write("3️⃣ (Opcional) Sube una foto como respuesta:")
-    imagen_respuesta = st.file_uploader("📷 Foto que debo responder cuando me pregunten eso", type=["jpg", "jpeg", "png", "webp"], key="img_resp")
-    st.markdown('<div class="guardar">', unsafe_allow_html=True)
-    boton_guardar = st.button("💾  GUARDAR LO QUE ME ENSEÑASTE", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    if boton_guardar:
-        if pregunta_ensenar.strip() != "":
-            imagen_b64 = imagen_a_texto(imagen_respuesta) if imagen_respuesta is not None else None
-            st.session_state.aprendido[pregunta_ensenar.lower().strip()] = {"texto": respuesta_ensenar, "imagen": imagen_b64}
-            guardar_memoria()
-            st.session_state.ultima_respuesta = f"Listo Manu, ya lo guardé para siempre. Cuando me preguntes '{pregunta_ensenar}' te voy a responder con lo que me enseñaste."
-            if hablar:
-                st.session_state.audio_respuesta = manubot_habla(st.session_state.ultima_respuesta)
-            st.session_state.modo_ensenar = False
-            st.session_state.texto_voz = ""
-            st.rerun()
-        else:
-            st.warning("Escribe al menos la pregunta, Manu.")
-
-if boton_enviar and pregunta.strip() != "":
-    links = re.findall(r'https?://\S+', pregunta)
-    if links:
-        link = links[0]
-        st.session_state.ultima_pregunta = pregunta
-        st.session_state.ultima_respuesta = f"Ya vi tu link, Manu. Aquí está:\n\n{link}"
-        st.session_state.ultima_imagen_respuesta = None
-        st.markdown(f"[🔗 Abrir link]({link})")
-    else:
-        respuesta, img_resp = inteligencia_manubot(pregunta)
-        st.session_state.ultima_pregunta = pregunta
-        st.session_state.ultima_respuesta = respuesta
-        st.session_state.ultima_imagen_respuesta = img_resp
-    # AQUÍ ES DONDE HABLA, MANU
-    if hablar:
-        st.session_state.audio_respuesta = manubot_habla(st.session_state.ultima_respuesta)
-    st.session_state.texto_voz = ""
-    st.rerun()
-
-st.divider()
-st.write(f"🧠 Cosas que ya aprendí y guardé: {len(st.session_state.aprendido)} - Ya no se borran al actualizar")
+```bash
+pip install flask
+python app.py
