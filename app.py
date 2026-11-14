@@ -23,7 +23,6 @@ HTML = """
 <title>FOTO ARES</title>
 <style>
 body{font-family:Arial;background:#111;color:#fff;margin:0;padding:20px;text-align:center}
-.nav{margin-bottom:20px}
 .nav a{color:#ffcc00;text-decoration:none;margin:0 10px;font-weight:bold;font-size:18px}
 .card{background:#222;padding:15px;border-radius:15px;margin:10px auto;max-width:400px}
 h1{color:#ffcc00}
@@ -32,50 +31,38 @@ input{width:90%;padding:12px;border-radius:10px;border:0;margin:10px 0}
 </style>
 </head>
 <body>
-<h1>FOTO ARES 🐶</h1>
+<h1>FOTO ARES</h1>
 <div class="nav">
 <a href="/">Manada</a>
-<a href="/camara">Cámara</a>
+<a href="/camara">Camara</a>
 <a href="/momentos">Momentos</a>
 <a href="/alerta">Alerta</a>
 <a href="/chat">Chat</a>
 </div>
-
 {% if page == 'manada' %}
 <h2>Mi Manada</h2>
 {% for p in perros %}
-<div class="card">
-<h3>{{ p.nombre }}</h3>
-<p>{{ p.raza }} - {{ p.edad }}</p>
-</div>
+<div class="card"><h3>{{ p.nombre }}</h3><p>{{ p.raza }} - {{ p.edad }}</p></div>
 {% endfor %}
 {% endif %}
-
 {% if page == 'camara' %}
-<h2>Cámara</h2>
-<div class="card"><p>📷 Aquí va la cámara en vivo de Ares</p></div>
+<h2>Camara</h2>
+<div class="card"><p>Aqui va la camara en vivo de Ares</p></div>
 {% endif %}
-
 {% if page == 'momentos' %}
 <h2>Momentos</h2>
 {% for m in momentos %}
-<div class="card">
-<h3>{{ m.titulo }}</h3>
-<p>{{ m.fecha }}</p>
-</div>
+<div class="card"><h3>{{ m.titulo }}</h3><p>{{ m.fecha }}</p></div>
 {% endfor %}
 {% endif %}
-
 {% if page == 'alerta' %}
-<h2>🚨 Alerta</h2>
-<div class="card"><p>Si Ares se sale, aquí te avisamos</p><button>Activar Alerta</button></div>
+<h2>Alerta</h2>
+<div class="card"><p>Si Ares se sale, aqui te avisamos</p><button>Activar Alerta</button></div>
 {% endif %}
-
 {% if page == 'chat' %}
 <h2>Chat Manada</h2>
 <div class="card"><input placeholder="Escribe un mensaje..."><br><button>Enviar</button></div>
 {% endif %}
-
 </body>
 </html>
 """
