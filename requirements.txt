@@ -1,5 +1,2 @@
 Flask
-Pillow
-torch
-transformers
-numpy
+gunicorn
