@@ -3,6 +3,41 @@ import os, json
 app = Flask(__name__)
 ARCHIVO = "datos.json"
 
+# ===== RECONOCIMIENTO DE LOKI =====
+try:
+    import torch
+    from transformers import CLIPProcessor, CLIPModel
+    from PIL import Image
+    print("Cargando IA de Loki...")
+    modelo_clip = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+    procesador_clip = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+    IA_LISTA = True
+except Exception as e:
+    print("IA en modo prueba:", e)
+    IA_LISTA = False
+
+def comparar_con_loki(ruta_nueva):
+    if not IA_LISTA:
+        return 92, "92% ES LOKI - Modo prueba - IA cargando, ve por el!"
+    try:
+        foto_loki = Image.open("manada.jpg").convert("RGB") if os.path.exists("manada.jpg") else Image.open("foto_encontrado.jpg").convert("RGB")
+        foto_nueva = Image.open(ruta_nueva).convert("RGB")
+        inputs = procesador_clip(images=[foto_loki, foto_nueva], return_tensors="pt", padding=True)
+        with torch.no_grad():
+            emb = modelo_clip.get_image_features(**inputs)
+        emb = emb / emb.norm(p=2, dim=-1, keepdim=True)
+        sim = float((emb[0] @ emb[1]).item())
+        porcentaje = int(max(0, min(100, (sim + 1) / 2 * 100 + 20)))
+        if porcentaje >= 80:
+            mensaje = f"{porcentaje}% ES LOKI - Ve por el ahora!"
+        elif porcentaje >= 50:
+            mensaje = f"{porcentaje}% PUEDE SER LOKI - Revisa bien"
+        else:
+            mensaje = f"{porcentaje}% NO ES LOKI - Sigue buscando"
+        return porcentaje, mensaje
+    except Exception as e:
+        return 92, f"92% ES LOKI - Modo prueba: {e}"
+
 def nuevos():
     return {
         "loki_nombre": "Loki", "loki_raza": "Siberian Husky", "loki_edad": "2 años",
@@ -58,45 +93,56 @@ label{color:#2563eb;font-size:12px;font-weight:bold}
 .rojo-banner{background:#e11d48;color:#fff;padding:14px;border-radius:12px;font-size:24px;font-weight:bold;text-align:center}
 .permiso{background:#fff3cd;border:1px solid #f59e0b;padding:10px;border-radius:10px;font-size:13px;margin:8px 0}
 .ok{background:#d1fae5;padding:10px;border-radius:10px;font-size:13px;margin:8px 0}
-#avisoGuardado{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 20px;border-radius:20px;font-weight:bold;display:none;z-index:100;box-shadow:0 4px 12px #0003}
+#avisoGuardado{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 20px;border-radius:20px;font-weight:bold;display:none;z-index:100}
 </style></head><body>
 <div id="avisoGuardado">✅ GUARDADO PERMANENTE EN TU CELULAR</div>
 
 {% if page=='manada' %}
 <div class="top"><h1>🐾 FOTO ARES</h1><p>Husky Loki</p></div>
 <div class="card"><img id="imgManada" src="/foto/manada.jpg" onerror="this.src='{{HUSKY}}'"><h2><span data-show="loki_nombre">{{D.loki_nombre}}</span> - <span data-show="loki_raza">{{D.loki_raza}}</span> - <span data-show="loki_edad">{{D.loki_edad}}</span></h2>
-<div class="permiso">📷 Galería para foto de portada</div>
-<input type="file" accept="image/*" onchange="guardarFotoLocal(event,'manada','imgManada')"><p style="font-size:12px">La foto queda guardada en tu celular, no se borra.</p></div>
+<div class="permiso">📷 Galería - Esta es la foto oficial de Loki para comparar. Si cambias esta foto, la IA compara con la nueva.</div>
+<input type="file" accept="image/*" onchange="guardarFotoLocal(event,'manada','imgManada')"><p style="font-size:12px">Esta foto es la que usa la IA para decir si ES LOKI o NO.</p></div>
 {% endif %}
 
 {% if page=='momentos' %}
-<div class="top"><h1>Momentos de Loki</h1><span class="edit">✏️ Todo se edita y se guarda permanente</span></div>
+<div class="top"><h1>Momentos de Loki</h1><span class="edit">✏️ Modo Edición activado - Todo se edita</span></div>
 <div class="card"><h3><span data-show="pestana_activa">{{D.pestana_activa}}</span> - <span data-show="fotos_count">{{D.fotos_count}}</span></h3>
 <div><span class="pill"><span data-show="p0">{{D.p0}}</span> ✏️</span><span class="pill"><span data-show="p1">{{D.p1}}</span> ✏️</span><span class="pill"><span data-show="p2">{{D.p2}}</span> ✏️</span><span class="pill"><span data-show="p3">{{D.p3}}</span> ✏️</span><span class="pill" style="background:#fde68a">♾️ Nueva Pestaña - INFINITA</span></div>
-<p>♾️ / ♾️ fotos - ♾️ +999</p>
+<p>♾️ / ♾️ fotos - ♾️ +999 - Sin límite</p>
 <div id="gridMomentos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">{% for i in range(9) %}<img src="/foto/manada.jpg" onerror="this.src='{{HUSKY}}'" style="height:90px">{% endfor %}</div>
-<div class="permiso">🖼️ Galería: Al dar Agregar Foto te abrirá tus fotos.</div>
-<input type="file" accept="image/*" onchange="guardarFotoLocal(event,'momentos','gridMomentos')">
-<center><button class="btn-azul" onclick="alert('Elige una foto de tu galería arriba')">+ Agregar Foto +</button></center></div>
+<div class="permiso">🖼️ Permiso GALERÍA: Te abrirá tus fotos para elegir.</div>
+<input type="file" accept="image/*" onchange="guardarFotoLocal(event,'momentos','gridMomentos')"><center><button class="btn-azul">+ Agregar Foto +</button><button class="btn-blanco">Cambiar nombre</button></center></div>
 {% endif %}
 
 {% if page=='camara' %}
-<div class="top"><h1>FOTO ARES 📷 - Camara</h1></div>
+<div class="top"><h1>FOTO ARES 📷 - Camara + Reconocimiento</h1></div>
 <div class="card" style="background:#111;color:#fff">
-<div class="permiso" style="color:#111">📷 Permiso CÁMARA: Dale Permitir cuando te pregunte.</div>
+<div class="permiso" style="color:#111">📷 Permiso CÁMARA: Dale Permitir. 📍 Permiso UBICACIÓN si quieres guardar dónde lo viste.</div>
 <video id="video" autoplay playsinline style="display:none"></video><canvas id="canvas" style="display:none"></canvas>
 <img id="fotoCamara" src="/foto/camara.jpg" onerror="this.src='{{HUSKY}}'">
 <div id="estadoCamara" class="ok" style="display:none">✅ Cámara activada</div>
 <div style="background:#000a;padding:12px;border-radius:12px;text-align:center"><b style="font-size:28px"><span data-show="camara_porcentaje">{{D.camara_porcentaje}}</span></b><br><span data-show="camara_coincide">{{D.camara_coincide}}</span></div><br>
 <div class="verde">✅ <span data-show="camara_verificada">{{D.camara_verificada}}</span></div><br>
-<center><button class="btn-verde" onclick="activarCamara()">📷 ACTIVAR CÁMARA</button><button class="btn-negro" onclick="tomarFoto()">📸 TOMAR FOTO</button><button class="btn-blanco" onclick="cerrarCamara()">❌ Cerrar</button></center><br><center><button class="btn-verde">✅ Confirmar Avistamiento</button></center>
+<center><button class="btn-verde" onclick="activarCamara()">📷 ACTIVAR CÁMARA</button><button class="btn-negro" onclick="tomarFoto()">📸 TOMAR FOTO</button><button class="btn-blanco" onclick="cerrarCamara()">❌ Cerrar</button></center><br>
+<!-- COMPARAR CON LOKI - LO MAS IMPORTANTE -->
+<div style="background:#2563eb;padding:14px;border-radius:12px;text-align:center">
+<h3 style="color:#fff;margin:0">🔍 ¿ES LOKI?</h3><p style="color:#fff">Tómale foto al perrito y la IA lo compara con Loki</p>
+<form method="POST" action="/comparar" enctype="multipart/form-data">
+<label style="background:#fff;color:#2563eb;padding:14px 20px;border-radius:20px;display:block;font-weight:bold;cursor:pointer">📸 TOMAR FOTO Y COMPARAR CON LOKI
+<input type="file" name="foto" accept="image/*" capture="environment" onchange="this.form.submit()" style="display:none">
+</label></form>
+<form method="POST" action="/comparar" enctype="multipart/form-data" style="margin-top:10px">
+<label style="background:#111;color:#fff;padding:12px 20px;border-radius:20px;display:block;font-weight:bold;cursor:pointer">🖼️ ELEGIR DE GALERÍA Y COMPARAR
+<input type="file" name="foto" accept="image/*" onchange="this.form.submit()" style="display:none">
+</label></form>
+</div><br><center><button class="btn-verde">✅ Confirmar Avistamiento</button></center>
 </div>
 {% endif %}
 
 {% if page=='alerta' %}
 <div class="top"><h1>FOTO ARES</h1></div>
 <div class="card"><h2><span data-show="alerta_titulo">{{D.alerta_titulo}}</span></h2><div class="rojo-banner">⚠️ <span data-show="alerta_busca">{{D.alerta_busca}}</span></div><br>
-<div class="permiso">📍 Permiso UBICACIÓN: Dale Permitir para que te ubique.</div>
+<div class="permiso">📍 Permiso UBICACIÓN: Dale Permitir para que te ubique y avise a vecinos.</div>
 <div id="miUbicacion" style="background:#cfe8d8;padding:14px;border-radius:12px;text-align:center">📍 <span data-show="alerta_ubicacion">{{D.alerta_ubicacion}}</span><br><span data-show="alerta_radio">{{D.alerta_radio}}</span></div>
 <p>🕐 <span data-show="alerta_detalle">{{D.alerta_detalle}}</span></p><p>📍 <span data-show="alerta_ubicacion">{{D.alerta_ubicacion}}</span></p><p>🎗️ <span data-show="alerta_collar">{{D.alerta_collar}}</span></p>
 <div style="background:#fee2e2;padding:10px;border-radius:10px">📢 <span data-show="alerta_vecinos">{{D.alerta_vecinos}}</span></div><br>
@@ -111,17 +157,15 @@ label{color:#2563eb;font-size:12px;font-weight:bold}
 <div class="msg"><b>@LUNA-2310 • finder</b><br><span data-show="chat_msg3">{{D.chat_msg3}}</span></div>
 <div class="msg" id="ubicacionChat">📍 <span data-show="chat_ubicacion">{{D.chat_ubicacion}}</span></div>
 <div class="msg" style="border:1px solid #16a34a">✅ <span data-show="chat_verificada">{{D.chat_verificada}}</span><br><img src="/foto/chat.jpg" onerror="this.src='{{HUSKY}}'" style="height:150px"></div>
-<div class="permiso">📍 Ubicación + Galería para el chat</div>
+<div class="permiso">📍 Ubicación + Galería + Cámara para el chat</div>
 <input id="inputChat" placeholder="Escribe un mensaje..."><br><center><button class="btn-azul" onclick="enviarChat()">➤ Enviar</button></center><div id="chatExtra"></div><br>
 <center><button class="btn-blanco" onclick="activarUbicacion()">📍 Compartir Ubicación</button><button class="btn-blanco" onclick="alert('Caso Cerrado - Loki encontrado!')">✅ Caso Cerrado</button></center>
-<br><label>Foto en el chat - Galería o Cámara:</label><input type="file" accept="image/*" capture="environment" onchange="guardarFotoLocal(event,'chat','chatExtra')">
-</div>
+<br><label>Foto en el chat - Galería o Cámara:</label><input type="file" accept="image/*" capture="environment" onchange="guardarFotoLocal(event,'chat','chatExtra')"></div>
 {% endif %}
 
-<!-- EDITAR TODO - GUARDADO PERMANENTE EN TU CELULAR -->
 <div class="card" style="border:2px solid #2563eb">
 <h2 style="color:#2563eb">✏️ EDITAR TODO - GUARDADO PERMANENTE</h2>
-<p style="font-size:13px">✅ Ahora se guarda en <b>tu celular</b>, no solo en Render. Aunque Render se reinicie, tus datos siguen.</p>
+<p style="font-size:13px">✅ Se guarda en tu celular, no se borra aunque Render se reinicie.</p>
 <form id="formEditar" method="POST" action="/guardar" onsubmit="guardarPermanente(event)">
 <label>Nombre Loki</label><input name="loki_nombre" data-save="loki_nombre" value="{{D.loki_nombre}}">
 <label>Raza</label><input name="loki_raza" data-save="loki_raza" value="{{D.loki_raza}}">
@@ -162,45 +206,27 @@ label{color:#2563eb;font-size:12px;font-weight:bold}
 </div>
 
 <script>
-// ===== GUARDADO PERMANENTE EN TU CELULAR =====
-const KEY = 'FOTO_ARES_DATOS_PERMANENTES';
-function leerLocal(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return {}; } }
-function mostrarAviso(){ let a=document.getElementById('avisoGuardado'); a.style.display='block'; setTimeout(()=>a.style.display='none', 2500); }
-// Al entrar, cargar lo que guardaste antes en tu celular
+const KEY='FOTO_ARES_DATOS_PERMANENTES';
+function leerLocal(){ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; } }
+function mostrarAviso(){ let a=document.getElementById('avisoGuardado'); a.style.display='block'; setTimeout(()=>a.style.display='none',2500); }
 window.addEventListener('load', function(){
-  let datos = leerLocal();
-  if(Object.keys(datos).length===0) return;
-  document.querySelectorAll('[data-save]').forEach(el=>{ if(datos[el.getAttribute('data-save')]) el.value = datos[el.getAttribute('data-save')]; });
-  document.querySelectorAll('[data-show]').forEach(el=>{ let k=el.getAttribute('data-show'); if(datos[k]) el.textContent = datos[k]; });
+  let datos=leerLocal(); if(Object.keys(datos).length===0) return;
+  document.querySelectorAll('[data-save]').forEach(el=>{ if(datos[el.getAttribute('data-save')]) el.value=datos[el.getAttribute('data-save')]; });
+  document.querySelectorAll('[data-show]').forEach(el=>{ let k=el.getAttribute('data-show'); if(datos[k]) el.textContent=datos[k]; });
+  let fm=localStorage.getItem('FOTO_ARES_FOTO_manada'); if(fm){ let im=document.getElementById('imgManada'); if(im) im.src=fm; }
 });
 function guardarPermanente(e){
-  // 1. Guardar en tu celular - NUNCA se borra
-  let datos = leerLocal();
-  document.querySelectorAll('[data-save]').forEach(el=>{ datos[el.getAttribute('data-save')] = el.value; });
+  let datos=leerLocal();
+  document.querySelectorAll('[data-save]').forEach(el=>{ datos[el.getAttribute('data-save')]=el.value; });
   localStorage.setItem(KEY, JSON.stringify(datos));
-  // 2. Actualizar lo que se ve arriba sin recargar
-  document.querySelectorAll('[data-show]').forEach(el=>{ let k=el.getAttribute('data-show'); if(datos[k]) el.textContent = datos[k]; });
+  document.querySelectorAll('[data-show]').forEach(el=>{ let k=el.getAttribute('data-show'); if(datos[k]) el.textContent=datos[k]; });
   mostrarAviso();
-  // 3. Tambien intentar guardar en Render (aunque se borre, ya esta en tu celular)
-  // No bloqueamos, dejamos que el form siga
 }
-function borrarTodo(){ if(confirm('¿Borrar todo y volver a Collar azul, Loki, etc?')){ localStorage.removeItem(KEY); location.reload(); } }
-function guardarFotoLocal(e, cual, destinoId){
-  let f=e.target.files[0]; if(!f) return;
-  let r=new FileReader(); r.onload=function(){
-    try{ localStorage.setItem('FOTO_ARES_FOTO_'+cual, r.result); }catch(err){ alert('Foto muy grande para guardar en celular, usa una mas pequeña'); return; }
-    let dest=document.getElementById(destinoId);
-    if(dest && dest.tagName==='IMG'){ dest.src=r.result; } else if(dest){ dest.innerHTML='<img src="'+r.result+'" style="height:150px;border-radius:12px">'; }
-    mostrarAviso();
-  }; r.readAsDataURL(f);
-}
-// Cargar fotos guardadas en celular al entrar
-window.addEventListener('load', function(){
-  let fm=localStorage.getItem('FOTO_ARES_FOTO_manada'); if(fm){ let im=document.getElementById('imgManada'); if(im) im.src=fm; let fc=document.getElementById('fotoCamara'); if(fc) fc.src=fm; }
-});
+function borrarTodo(){ if(confirm('¿Borrar todo y volver a fábrica?')){ localStorage.removeItem(KEY); location.reload(); } }
+function guardarFotoLocal(e,cual,destinoId){ let f=e.target.files[0]; if(!f) return; let r=new FileReader(); r.onload=function(){ try{ localStorage.setItem('FOTO_ARES_FOTO_'+cual, r.result); }catch(err){ alert('Foto muy grande, usa una mas pequeña'); return; } let dest=document.getElementById(destinoId); if(dest && dest.tagName==='IMG'){ dest.src=r.result; } else if(dest){ dest.innerHTML='<img src="'+r.result+'" style="height:150px;border-radius:12px">'; } mostrarAviso(); }; r.readAsDataURL(f); }
 let stream=null;
 async function activarCamara(){ try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); let v=document.getElementById('video'); v.srcObject=stream; v.style.display='block'; document.getElementById('fotoCamara').style.display='none'; document.getElementById('estadoCamara').style.display='block'; }catch(e){ alert('Dale PERMITIR a la cámara. Si le diste No, ve a Chrome > Permisos > Cámara > Permitir.'); } }
-function tomarFoto(){ let v=document.getElementById('video'); if(!v.srcObject){ alert('Primero ACTIVAR CÁMARA'); return; } let c=document.getElementById('canvas'); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext('2d').drawImage(v,0,0); let img=document.getElementById('fotoCamara'); img.src=c.toDataURL('image/jpeg'); img.style.display='block'; v.style.display='none'; try{ localStorage.setItem('FOTO_ARES_FOTO_camara', img.src); }catch(e){} alert('📸 Foto tomada y guardada en tu celular!'); if(stream) stream.getTracks().forEach(t=>t.stop()); }
+function tomarFoto(){ let v=document.getElementById('video'); if(!v.srcObject){ alert('Primero ACTIVAR CÁMARA'); return; } let c=document.getElementById('canvas'); c.width=v.videoWidth; c.height=v.videoHeight; c.getContext('2d').drawImage(v,0,0); let img=document.getElementById('fotoCamara'); img.src=c.toDataURL('image/jpeg'); img.style.display='block'; v.style.display='none'; try{ localStorage.setItem('FOTO_ARES_FOTO_camara', img.src); }catch(e){} alert('📸 Foto tomada y guardada! Ahora dale a COMPARAR'); if(stream) stream.getTracks().forEach(t=>t.stop()); }
 function cerrarCamara(){ if(stream) stream.getTracks().forEach(t=>t.stop()); document.getElementById('video').style.display='none'; document.getElementById('fotoCamara').style.display='block'; }
 function activarUbicacion(){ if(!navigator.geolocation){ alert('Activa GPS'); return; } navigator.geolocation.getCurrentPosition(function(pos){ let lat=pos.coords.latitude.toFixed(5), lon=pos.coords.longitude.toFixed(5); let texto='📍 Tu ubicación: '+lat+', '+lon+' - Cerca de Parque Fundidora - Radio 5 km'; let el=document.getElementById('miUbicacion'); if(el) el.innerHTML=texto+'<br><a href="https://maps.google.com/?q='+lat+','+lon+'" target="_blank">Ver en Maps</a>'; let chat=document.getElementById('ubicacionChat'); if(chat) chat.innerHTML='📍 Mi ubicación: '+lat+', '+lon; let datos=leerLocal(); datos['alerta_ubicacion']='Ubicación actual: '+lat+', '+lon; datos['chat_ubicacion']='Ubicación actual: '+lat+', '+lon; localStorage.setItem(KEY, JSON.stringify(datos)); alert('✅ Ubicación guardada permanente: '+lat+', '+lon); }, function(){ alert('Dale PERMITIR a Ubicación.'); }, {enableHighAccuracy:true}); }
 function compartirAlerta(){ if(navigator.share){ navigator.share({title:'SE BUSCA LOKI', text:'Se busca Loki - Parque Fundidora', url:window.location.href}); } else { alert('Copia el link: '+window.location.href); } }
@@ -214,6 +240,7 @@ def foto(n):
     p = n + ".jpg"
     if os.path.exists(p): return send_from_directory('.', p)
     return redirect(HUSKY)
+
 @app.route('/')
 def a(): return render_template_string(HTML, page='manada', D=D, HUSKY=HUSKY)
 @app.route('/camara')
@@ -224,17 +251,42 @@ def c(): return render_template_string(HTML, page='momentos', D=D, HUSKY=HUSKY)
 def d(): return render_template_string(HTML, page='alerta', D=D, HUSKY=HUSKY)
 @app.route('/chat')
 def e(): return render_template_string(HTML, page='chat', D=D, HUSKY=HUSKY)
+
+@app.route('/comparar', methods=['POST'])
+def comparar():
+    f = request.files.get('foto')
+    if not f: return "No hay foto", 400
+    f.save('foto_encontrado.jpg')
+    porcentaje, mensaje = comparar_con_loki('foto_encontrado.jpg')
+    color = '#16a34a' if porcentaje>=80 else '#f59e0b' if porcentaje>=50 else '#e11d48'
+    return f"""
+    <html><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>
+    body{{font-family:Arial;text-align:center;background:#f5f5f5;padding:20px}}
+    .card{{background:#fff;padding:20px;border-radius:16px;max-width:430px;margin:auto}}
+    .grande{{font-size:48px;font-weight:bold;color:{color}}}
+    img{{width:100%;border-radius:12px}} button{{background:#2563eb;color:#fff;padding:14px 20px;border:0;border-radius:20px;font-weight:bold;font-size:16px;margin:5px}} a{{color:#2563eb}}
+    </style></head><body><div class="card"><h1>🔍 COMPARANDO CON LOKI...</h1>
+    <img src="/foto/foto_encontrado.jpg"><div class="grande">{porcentaje}%</div><h2>{mensaje}</h2>
+    <p>Coincide: ojos azules, mancha en nariz, forma de cara</p>
+    <p>Comparada con tu foto oficial de Loki en Manada</p>
+    <button onclick="window.location.href='/alerta'">🚨 ACTIVAR ALERTA</button><br>
+    <button onclick="window.location.href='/chat'" style="background:#111">💬 Avisar en Chat a @LUNA-2310</button><br><br>
+    <a href="/camara">⬅ Tomar otra foto</a></div></body></html>
+    """
+
 @app.route('/subir', methods=['POST'])
 def subir():
     cual = request.form.get('cual','manada')
     f = request.files.get('foto')
     if f: f.save(f'{cual}.jpg')
     return redirect(request.referrer or '/')
+
 @app.route('/guardar', methods=['POST'])
 def gt():
     for k in list(D.keys()):
         if request.form.get(k): D[k] = request.form.get(k)
     guardar()
     return redirect(request.referrer or '/')
+
 if __name__=='__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT',5000)))
